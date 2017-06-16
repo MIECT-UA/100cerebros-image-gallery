@@ -8,7 +8,7 @@
  * |/     \||/     \|\_______/|/    )_)     |/       |/   \__/(_______)(_______)|/   \__/|/     \||/     \|
  */
 
-path = "https://xcoa.av.it.pt/labi1617-p2-g2"
+path = "" // https://xcoa.av.it.pt/labi1617-p2-g2
 
 function generateContent() {
 
@@ -291,12 +291,12 @@ function generateContent() {
       for (var i = 0; i < data.length; i++) {
         for (key in data[i]) {
           $(".content").append("<ul class='table-view gallery-view' id='"+key+"'> \
-                                  <h4>"+ ((key == 2) ? "100Cerebros\'" : "Group "+key+"\'s") +" Images</h4> \
+                                  <h4><a href='https://xcoa.av.it.pt/labi1617-p2-g"+key+"'>"+ ((key == 2) ? "100Cerebros\'" : "Group "+key+"\'s") +" Images</a></h4> \
                                 </ul>");
           for (var j = 0; j < data[i][key].length; j++) {
             addNewImageOnly(data[i][key][j],
                             "https://xcoa.av.it.pt/labi1617-p2-g"+key+"/api/get?id="+data[i][key][j].id,
-                            "#"+key, "not-selected", "", "not-selected", "");
+                            "#"+key, "https://xcoa.av.it.pt/labi1617-p2-g"+key, "not-selected", "", "not-selected", "");
           }
         }
       }
@@ -417,16 +417,16 @@ function addNewImage(data, userUpvotes, userDownvotes) {
     downvotesPrefix = "_small";
   }
 
-  addNewImageOnly(data, path+"/api/get?id="+data.id, "#imgList", upvoted, upvotesPrefix, downvoted, downvotesPrefix);
+  addNewImageOnly(data, path+"/api/get?id="+data.id, "#imgList", "image.html?id="+data.id, upvoted, upvotesPrefix, downvoted, downvotesPrefix);
 
 }
 
 // add a new image, with generic vote information
-function addNewImageOnly(data, requestPath, parentSelector, upvoted, upvotesPrefix, downvoted, downvotesPrefix) {
+function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvotesPrefix, downvoted, downvotesPrefix) {
 
     $(parentSelector).append(
       "<li class='table-view-cell media' > \
-        <a href= 'image.html?id="+ data.id +"'> \
+        <a href= '"+href+"'> \
           <img id='"+data.id+"' class='media-object pull-left' src=''> \
           <div class='votes'> \
             <img src='img/icons/upvotes"+upvotesPrefix+".png' alt='Upvote'> \
@@ -451,6 +451,10 @@ function setImgSrc(requestPath, imgSelector, removeIdSelector) {
           if (removeIdSelector) {
             $(imgSelector).removeAttr('id');
           }
+          // remove faulty (no src) images
+        setTimeout(function() {
+          $('img[src=""]').parent().parent().addClass("invisible");
+        }, 1000);
         };
         fileRead.readAsDataURL(this.response);
       }

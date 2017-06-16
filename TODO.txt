@@ -1,0 +1,2 @@
+1. Remover get user-head thingy, adicionar ao metodo como parametro que e passado ao pedido
+2. Adiconar pag de login ao front end 

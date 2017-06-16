@@ -16,7 +16,7 @@
 
 /* non-display, emphasize and de-emphasize classes */
 .invisible {
-  display: none;
+  display: none !important;
   visibility: hidden;
 }
 .selected {
