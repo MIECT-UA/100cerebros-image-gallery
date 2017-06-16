@@ -20,19 +20,31 @@ function generateContent() {
     // add logo to page
     $("#logo img").prop("src", path+"/static/img/100brains.png");
 
+    setTimeout(function() {
+      location.replace(path+"/static/login.html");
+    }, 600);
+
+  /** LOGIN **********************************************************************************/
+} else if ($("div.content").data("id") == "login") {
+
+  $("#login button").click(function(event) {
+    event.preventDefault();
+
+    var userID = $('#login input[name="email"]').val().split("@")[0];
+    sessionStorage.setItem("userID", userID);
+
     // get user credentials and save them
-    $.get(path+"/userID", function(response){
-      sessionStorage.setItem("userID", response.userID);
+    $.get(path+"/api/userID", { "userID" : userID }, function(response){
       sessionStorage.setItem("username", response.username);
       sessionStorage.setItem("avatar", response.avatar);
       sessionStorage.setItem("userUpvotes", response.upvotes);
       sessionStorage.setItem("userDownvotes", response.downvotes);
       sessionStorage.setItem("userViews", response.views);
-    });
 
-    setTimeout(function() {
       location.replace(path+"/static/home.html");
-    }, 600);
+    }, 'json');
+  });
+
 
   /** UPLOAD *********************************************************************************/
   } else if ($("div.content").data("id") == "upload") {
@@ -48,6 +60,7 @@ function generateContent() {
       // add loading effect
       $("#loading").toggleClass("invisible");
       $.post(path+"/api/putAdvanced", {
+        "userID" : sessionStorage.getItem("userID"),
         "id" : imgID,
         "type" : "PHOTO",
         "allIDs" : "["+imgID+"]"
@@ -96,7 +109,10 @@ function generateContent() {
 
       if(userViews.indexOf(imgID) === -1) {
         // it's the first time user is seeing the image
-        $.post(path+"/api/updateViews", { "imgID" : imgID }, function() {
+        $.post(path+"/api/updateViews", {
+          "userID" : sessionStorage.getItem("userID"),
+          "imgID" : imgID
+        }, function() {
           allCategoriesViews[imgInfo.category].push(imgID);
           sessionStorage.setItem("userViews", JSON.stringify(allCategoriesViews));
         }, 'json');
@@ -166,6 +182,7 @@ function generateContent() {
       // make a submit request
       var category = (currentIndex === 0) ? "PHOTO" : "EFFECT";
       $.post(path+"/api/putAdvanced", {
+        "userID" : sessionStorage.getItem("userID"),
         "id" : imgIDs[currentIndex],
         "type" : category,
         "allIDs" : JSON.stringify(imgIDs)
@@ -227,6 +244,7 @@ function generateContent() {
       // make a submit request
       var category = (topLine == "" && bottomLine == "") ? "PHOTO" : "MEME";
       $.post(path+"/api/putAdvanced", {
+        "userID" : sessionStorage.getItem("userID"),
         "id" : imgIDs[currentIndex],
         "type" : category,
         "allIDs" : JSON.stringify(imgIDs)
@@ -263,6 +281,8 @@ function generateContent() {
 
     // request server the images depending on which gallery is selected (and sort method?)
     $.get(path+"/api/list", function(data){
+
+      console.log(data);
 
       var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"))[gallery];
       var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"))[gallery];
@@ -314,11 +334,13 @@ function generateContent() {
       var newName = $('#changeUsername input[name="username"]').val();
 
       $.post(path+"/api/updateUserInfo", {
+        "userID" : sessionStorage.getItem("userID"),
         "avatar" : sessionStorage.getItem("avatar"),
         "username" : newName
       }, function() {
-        sessionStorage.setItem("username", newName);
-        location.reload();
+        console.log("got answer");
+        // sessionStorage.setItem("username", newName);
+        // location.reload();
       }, 'json');
     });
 
@@ -327,11 +349,13 @@ function generateContent() {
       var newAvatar = $(event.target).data('index');
 
       $.post(path+"/api/updateUserInfo", {
+        "userID" : sessionStorage.getItem("userID"),
         "avatar" : newAvatar,
         "username" : sessionStorage.getItem("username")
       }, function() {
-        sessionStorage.setItem("avatar", newAvatar);
-        location.reload();
+        console.log("got answer");
+        // sessionStorage.setItem("avatar", newAvatar);
+        // location.reload();
       }, 'json');
     });
 
@@ -622,6 +646,7 @@ $(document).on('click', "#imageView .votes button.upvote", function() {
   if (!$(downvoteBtn).hasClass("inactive")) { // sanity check
 
     $.post(path+"/api/updateVotes", {
+      "userID" : sessionStorage.getItem("userID"),
       "imgID"  : imgID,
       "vote"   : addedVote ? 2 : 1
     }, function() {
@@ -653,6 +678,7 @@ $(document).on('click', "#imageView .votes button.downvote", function() {
   if (!$(upvoteBtn).hasClass("inactive")) {
 
     $.post(path+"/api/updateVotes", {
+      "userID" : sessionStorage.getItem("userID"),
       "imgID"  : imgID,
       "vote"   : addedVote ? -1 : 0
     }, function() {

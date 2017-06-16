@@ -12,38 +12,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
     <!-- Include the compiled Ratchet CSS -->
-    <link href="https://xcoa.av.it.pt/labi1617-p2-g2/static/css/ratchet.min.css" rel="stylesheet">
+    <link href="css/ratchet.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="https://xcoa.av.it.pt/labi1617-p2-g2/static/css/custom.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
 
-    <!-- Include the compiled Ratchet JS -->
-    <script src="https://xcoa.av.it.pt/labi1617-p2-g2/static/js/ratchet.min.js" defer></script>
+    <!-- Include the compiled Ratchet JS and JQuery-->
+    <script src="js/ratchet.min.js" defer></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" defer></script>
     <!-- Custom JS -->
-    <!-- <script src="https://xcoa.av.it.pt/labi1617-p2-g2/static/js/main.min.js" defer></script> -->
     <script src="js/main.js" defer></script>
   </head>
   <body>
 
     <!-- Make sure all your bars are the first things in your <body> -->
-    <header class="invisible bar bar-nav">
+    <header id="header" class="bar bar-nav">
+      <a class="icon icon-left-nav pull-left" href="index.html" data-transition="slide-out"></a>
       <h1 class="title">100Cérebros' Image Gallery</h1>
     </header>
 
     <!-- Wrap all non-bar HTML in the .content div (this is actually what scrolls) -->
-    <div class="content" data-id="index">
-      <!-- Logo -->
-      <div id="logo">
-        <h2>100Cérebros'</h2>
-        <img src="static/img/100brains.png" alt="100 Brain's Logo" />
-        <h2 class="subtitle">Image Gallery</h2>
-      </div>
+    <div class="content" data-id="login">
+      <form id="login" class="input-group">
+        <div class="input-row">
+          <label>UA Email</label>
+          <input type="email" name="email" placeholder="ninja@ua.pt">
+        </div>
 
-      <!-- Logging in... message -->
-      <h1 id="loginMessage">Logging in...</h1>
+        <button type="submit" class="btn btn-positive btn-block">Log in</button>
 
-      <p id="copy">&copy; 100Cérebros 2017. All rights reserved.</p>
+      </form>
     </div>
+
+      <!-- Footer (must be present so ratchet's push works properly) -->
+      <nav id="footer" class="invisible bar bar-tab">
+      </nav>
 
   </body>
 </html>
