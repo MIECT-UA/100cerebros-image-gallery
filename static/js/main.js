@@ -101,6 +101,8 @@ function generateContent() {
     getImgInfo(imgID, function(imgInfo) {
       // save category
       $("#mainImg").data("category", imgInfo.category);
+      // add author name
+      $("#imgAuthor").html(imgInfo.username);
 
       // populate votes and views fields
       $('#views span').html(imgInfo.views);
@@ -651,9 +653,10 @@ $(document).on('click', "#imageView .votes button.upvote", function() {
   // added or removed upvote
   if (!$(downvoteBtn).hasClass("inactive")) { // sanity check
     $.get(path+"/api/updateVotes", {
-      "userID" : sessionStorage.getItem("userID"),
-      "imgID"  : imgID,
-      "vote"   : addedVote ? 1 : 2
+      "userID"  : sessionStorage.getItem("userID"),
+      "imgID"   : imgID,
+      "category": category,
+      "vote"    : addedVote ? 2 : 1
     }, function() {
       var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"));
 
@@ -683,9 +686,10 @@ $(document).on('click', "#imageView .votes button.downvote", function() {
   if (!$(upvoteBtn).hasClass("inactive")) {
 
     $.get(path+"/api/updateVotes", {
-      "userID" : sessionStorage.getItem("userID"),
-      "imgID"  : imgID,
-      "vote"   : addedVote ? 0 : -1
+      "userID"  : sessionStorage.getItem("userID"),
+      "imgID"   : imgID,
+      "category": category,
+      "vote"    : addedVote ? 0 : -1
     }, function() {
       var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"));
       if (!addedVote) { // add vote
