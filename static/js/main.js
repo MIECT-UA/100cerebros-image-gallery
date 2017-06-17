@@ -290,9 +290,9 @@ function generateContent() {
 
       // add images to the page
       for (var i = 0; i < data.length; i++) {
-
-        console.log(data[i]);
-        addNewImage(data[i], userUpvotes, userDownvotes);
+        if (data[i].category == gallery) {
+          addNewImage(data[i], userUpvotes, userDownvotes);
+        }
       }
     });
 
@@ -338,9 +338,8 @@ function generateContent() {
         "avatar" : sessionStorage.getItem("avatar"),
         "username" : newName
       }, function() {
-        console.log("got answer");
-        // sessionStorage.setItem("username", newName);
-        // location.reload();
+        sessionStorage.setItem("username", newName);
+        location.reload();
       }, 'json');
     });
 
@@ -353,9 +352,8 @@ function generateContent() {
         "avatar" : newAvatar,
         "username" : sessionStorage.getItem("username")
       }, function() {
-        console.log("got answer");
-        // sessionStorage.setItem("avatar", newAvatar);
-        // location.reload();
+        sessionStorage.setItem("avatar", newAvatar);
+        location.reload();
       }, 'json');
     });
 
