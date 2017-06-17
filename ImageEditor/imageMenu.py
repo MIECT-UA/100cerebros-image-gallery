@@ -19,8 +19,11 @@ def run_option(path, option, text=None, im=None):
     ###########################################################################
 
     ### EFFECTS ###
+    if   option == 0:
+        """returns all effects"""
+        return dic_allEffects(im)
 
-    if option == 1:
+    elif option == 1:
         """returns list of thumbnails with all effects and filters applied"""
         return (im, dic_thumbnails(im))
 
@@ -163,6 +166,55 @@ def dic_thumbnails(im):
     tn.append({"circlesWhite": circles_white(t)})
 
     return tn
+
+def dic_allEffects(im):
+    tn = []
+    # append effects
+    #tn.append({"crop": crop(t, 0, 0, 25, 25)})
+    print("PROCESSING EFFECTS =======================================")
+    print("Processing Rotate...")
+    tn.append({"rotate": rotate(im)})
+    print("Processing More Contrast...")
+    tn.append({"moreContrast": contrast(im, 2)})
+    print("Processing Less Contrast...")
+    tn.append({"lessContrast": contrast(im, 0.5)})
+    print("Processing More Saturation...")
+    tn.append({"moreSaturation": saturation(im, 2)})
+    print("Processing Less Saturation...")
+    tn.append({"lessSaturation": saturation(im, 0.5)})
+    print("Processing More Luminosity...")
+    tn.append({"moreLuminosity": luminosity(im, 2)})
+    print("Processing Less Luminosity...")
+    tn.append({"lessLuminosity": luminosity(im, 0.5)})
+    print("Processing Change to BPP...")
+    tn.append({"change_2bpp": change_2bpp(im)})
+    print("Processing Blur...")
+    tn.append({"blur": blur(blur(im,2),2)})
+    print("Processing Negative...")
+    tn.append({"negative": negative(im)})
+    print("Processing Black and White...")
+    tn.append({"blackWhite": black_white(im)})
+    print("Processing Sepia...")
+    tn.append({"sepia": sepia(im)})
+    print("Processing Is Edge...")
+    tn.append({"isEdge": is_edge(im,17)})
+
+    # append filterss
+    print("PROCESSING FILTERS =======================================")
+    print("Processing Old Photo...")
+    tn.append({"oldPhoto": old_photo(im)})
+    print("Processing Pencil Draw...")
+    tn.append({"pencilDraw": pencil_draw(im)})
+    print("Processing Color Draw...")
+    tn.append({"colorDraw": color_draw(im)})
+    print("Processing Circles (Black)...")
+    tn.append({"circlesBlack": circles_black(im)})
+    print("Processing Circles (White)...")
+    tn.append({"circlesWhite": circles_white(im)})
+
+    print("DONE SUCESSFULLY =========================================")
+    return tn
+
 def prepare_image(path):
     im = Image.open(path)
     width, height = im.size # by default (tags may exist, but not contain width and height)
