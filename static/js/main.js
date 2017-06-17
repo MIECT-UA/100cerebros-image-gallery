@@ -88,21 +88,19 @@ function generateContent() {
     setImgSrc(path+"/api/get?id="+imgID, "#mainImg", false);
     $("#mainImg").data("id", imgID);
 
-    // generate go back link
-    var prevURL = document.referrer;
-    // confirm user came from either gallery.html or all.html
-    if (prevURL.indexOf("gallery.") === -1 && prevURL.indexOf("all.") === -1) {
-      // if not, use a default address
-      prevURL = "gallery.html?g=photo&sort=upvotes"
-    }
-    $("#header a").attr("href", prevURL);
-
     // populate fields and do checks
     getImgInfo(imgID, function(imgInfo) {
       // save category
       $("#mainImg").data("category", imgInfo.category);
       // add author name
       $("#imgAuthor").html(imgInfo.username);
+
+      // generate go back link
+      if (imgInfo.username) { // only 100Cerebros galleries have username info
+        $("#header a").attr("href", "gallery.html?g="+imgInfo.category+"&sort=upvotes");
+      } else {
+        $("#header a").attr("href", "all.html");
+      }
 
       // populate votes and views fields
       $('#views span').html(imgInfo.views);
@@ -314,8 +312,9 @@ function generateContent() {
       $("#loading").toggleClass("invisible");
 
       data = JSON.parse(data);
-      for (var i = 0; i < data.length; i++) {
+      for (var i = data.length -1; i >= 0; i--) {
         for (key in data[i]) {
+          if (key == 12 || i == 6) {continue;} // trick to prevent overload of errors (which would prevent some of the actual correct images to load)
           $(".content").append("<ul class='table-view gallery-view' id='"+key+"'> \
                                   <h4><a href='https://xcoa.av.it.pt/labi1617-p2-g"+key+"'>"+ ((key == 2) ? "100Cerebros\'" : "Group "+key+"\'s") +" Images</a></h4> \
                                 </ul>");
@@ -330,8 +329,10 @@ function generateContent() {
   /** SETTINGS ******************************************************************************/
   } else if ($("div.content").data("id") == "settings") {
     // generate user's avatar and username
-    $("#username").html(sessionStorage.getItem("username"));
+    var username = sessionStorage.getItem("username");
+    $("#username").html(username);
     $("#userAvatar").prop('src', "img/icons/avatar_"+sessionStorage.getItem("avatar")+".png");
+    $("#changeUsername input[name='username']").attr("placeholder", username);
 
     // handle eusername change
     $('#changeUsername button[type=submit]').click(function(event) {
@@ -367,7 +368,7 @@ function generateContent() {
   } else if ($("div.content").data("id") == "logout") {
     sessionStorage.clear();
 
-    $("#login").attr('href', path);
+    $("#login").attr('href', path+"/");
   }
 }
 
@@ -452,10 +453,17 @@ function addNewImage(data, userUpvotes, userDownvotes) {
 // add a new image, with generic vote information
 function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvotesPrefix, downvoted, downvotesPrefix) {
 
+  var id = "";
+  if (data.id && data.id.indexOf(".") !== -1) {
+    id = data.id.substring(0,64);
+  } else if (data.id) {
+    id = data.id;
+  }
+
     $(parentSelector).append(
       "<li class='table-view-cell media' > \
         <a href= '"+href+"'> \
-          <img id='"+data.id.substring(0,64)+"' class='media-object pull-left' src=''> \
+          <img id='"+id+"' class='media-object pull-left' src=''> \
           <div class='votes'> \
             <img src='img/icons/upvotes"+upvotesPrefix+".png' alt='Upvote'> \
             <span class='upvotes "+upvoted+"'>"+ data.votes_up +"</span> \
@@ -465,7 +473,7 @@ function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvot
         </a> \
       </li>");
 
-      setImgSrc(requestPath, "#"+data.id.substring(0,64), false); // unique ids are used to avoid async conflicts
+      setImgSrc(requestPath, "#"+id, false); // unique ids are used to avoid async conflicts
 }
 
 function setImgSrc(requestPath, imgSelector, removeIdSelector) {
@@ -485,7 +493,7 @@ function setImgSrc(requestPath, imgSelector, removeIdSelector) {
           // remove faulty (no src) images
           setTimeout(function() {
             $('img[src=""]').parent().parent().addClass("invisible");
-          }, 1000);
+          }, 5000);
         };
         fileRead.readAsDataURL(this.response);
       }
