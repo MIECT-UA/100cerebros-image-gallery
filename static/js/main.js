@@ -86,6 +86,7 @@ function generateContent() {
 
     // get image
     setImgSrc(path+"/api/get?id="+imgID, "#mainImg", false);
+    $("#mainImg").data("id", imgID);
 
     // generate go back link
     var prevURL = document.referrer;
@@ -98,6 +99,9 @@ function generateContent() {
 
     // populate fields and do checks
     getImgInfo(imgID, function(imgInfo) {
+      // save category
+      $("#mainImg").data("category", imgInfo.category);
+
       // populate votes and views fields
       $('#views span').html(imgInfo.views);
       $('.votes span.upvotes').html(imgInfo.votes_up);
@@ -642,25 +646,24 @@ $(document).on('click', "#imageView .votes button.upvote", function() {
 
   var addedVote = $(upvoteBtn).hasClass("inactive");
   var imgID = $("#mainImg").data("id");
+  var category = $("#mainImg").data("category");
 
   // added or removed upvote
   if (!$(downvoteBtn).hasClass("inactive")) { // sanity check
-
-    $.post(path+"/api/updateVotes", {
+    $.get(path+"/api/updateVotes", {
       "userID" : sessionStorage.getItem("userID"),
       "imgID"  : imgID,
-      "vote"   : addedVote ? 2 : 1
+      "vote"   : addedVote ? 1 : 2
     }, function() {
-      getImgInfo(imgID, function(imgInfo) {
-        var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"));
-        if (addedVote) { // add vote
-          userUpvotes[category].push(imgID);
-        } else { // remove vote
-           userUpvotes[category].splice(userUpvotes[imgInfo.category].indexOf(imgID), 1);
-        }
-        sessionStorage.setItem("userViews", JSON.stringify(userUpvotes));
-        updateVotes(upvoteNum, upvoteBtn, addedVote);
-      });
+      var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"));
+
+      if (!addedVote) { // add vote
+        userUpvotes[category].push(imgID);
+      } else { // remove vote
+         userUpvotes[category].splice(userUpvotes[category].indexOf(imgID), 1);
+      }
+      sessionStorage.setItem("userUpvotes", JSON.stringify(userUpvotes));
+      updateVotes(upvoteNum, upvoteBtn, addedVote);
     }, 'json');
 
   }
@@ -674,25 +677,24 @@ $(document).on('click', "#imageView .votes button.downvote", function() {
 
   var addedVote = $(downvoteBtn).hasClass("inactive");
   var imgID = $("#mainImg").data("id");
+  var category = $("#mainImg").data("category");
 
   // added or removed downvote
   if (!$(upvoteBtn).hasClass("inactive")) {
 
-    $.post(path+"/api/updateVotes", {
+    $.get(path+"/api/updateVotes", {
       "userID" : sessionStorage.getItem("userID"),
       "imgID"  : imgID,
-      "vote"   : addedVote ? -1 : 0
+      "vote"   : addedVote ? 0 : -1
     }, function() {
-      getImgInfo(imgID, function(imgInfo) {
-        var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"));
-        if (addedVote) { // add vote
-          userUpvotes[imgInfo.category].push(imgID);
-        } else { // remove vote
-           userUpvotes[imgInfo.category].splice(userUpvotes[imgInfo.category].indexOf(imgID), 1);
-        }
-        sessionStorage.setItem("userViews", JSON.stringify(userUpvotes));
-        updateVotes(upvoteNum, upvoteBtn, addedVote);
-      });
+      var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"));
+      if (!addedVote) { // add vote
+        userDownvotes[category].push(imgID);
+      } else { // remove vote
+         userDownvotes[category].splice(userDownvotes[category].indexOf(imgID), 1);
+      }
+      sessionStorage.setItem("userDownvotes", JSON.stringify(userDownvotes));
+      updateVotes(downvoteNum, downvoteBtn, addedVote);
     }, 'json');
 
   }
