@@ -282,8 +282,6 @@ function generateContent() {
     // request server the images depending on which gallery is selected (and sort method?)
     $.get(path+"/api/list", function(data){
 
-      console.log(data);
-
       var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"))[gallery];
       var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"))[gallery];
 
@@ -292,6 +290,8 @@ function generateContent() {
 
       // add images to the page
       for (var i = 0; i < data.length; i++) {
+
+        console.log(data[i]);
         addNewImage(data[i], userUpvotes, userDownvotes);
       }
     });
@@ -451,7 +451,7 @@ function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvot
     $(parentSelector).append(
       "<li class='table-view-cell media' > \
         <a href= '"+href+"'> \
-          <img id='"+data.id+"' class='media-object pull-left' src=''> \
+          <img id='"+data.id.substring(0,64)+"' class='media-object pull-left' src=''> \
           <div class='votes'> \
             <img src='img/icons/upvotes"+upvotesPrefix+".png' alt='Upvote'> \
             <span class='upvotes "+upvoted+"'>"+ data.votes_up +"</span> \
@@ -460,7 +460,8 @@ function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvot
           </div> \
         </a> \
       </li>");
-      setImgSrc(requestPath, "#"+data.id, true); // unique ids are used to avoid async conflicts
+
+      setImgSrc(requestPath, "#"+data.id.substring(0,64), false); // unique ids are used to avoid async conflicts
 }
 
 function setImgSrc(requestPath, imgSelector, removeIdSelector) {
@@ -470,15 +471,17 @@ function setImgSrc(requestPath, imgSelector, removeIdSelector) {
       if (this.readyState == 4 && this.status == 200){
         // process server answer
         var fileRead = new FileReader();
-        fileRead.onload = function () {
-          $(imgSelector).prop("src", fileRead.result);
+        fileRead.onload = function (e) {
+
+          $(imgSelector).addClass("gotcha");
+          $(imgSelector).prop("src", e.target.result);
           if (removeIdSelector) {
             $(imgSelector).removeAttr('id');
           }
           // remove faulty (no src) images
-        setTimeout(function() {
-          $('img[src=""]').parent().parent().addClass("invisible");
-        }, 1000);
+          setTimeout(function() {
+            $('img[src=""]').parent().parent().addClass("invisible");
+          }, 1000);
         };
         fileRead.readAsDataURL(this.response);
       }
