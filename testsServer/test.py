@@ -20,22 +20,17 @@ data = {
 # r = requests.get("http://127.0.0.1:10002/api/userID")
 
 # GetMemePreviews
-# #headersMeme = {
-#     "tempImgID": "1497184659.387928",
-#     "topLine"  : "Test Top Line",
-#     "bottomLine" : "Test Bottom Line",
-#     "imgExtension" : "jpeg"
-# #}
+headersMeme = {
+    "tempImgID": "1497184659.387928",
+    "topLine"  : "Test Top Line",
+    "bottomLine" : "Test Bottom Line",
+    "imgExtension" : "jpeg"
+}
 
-#r = requests.get("http://127.0.0.1:10002/api/getMemePreview", headers=headersMeme)
+r = requests.get("http://127.0.0.1:10002/api/getMemePreview", headers=headersMeme)
 
 # Put and PutAdvanced
 
-# USERID
-headers = {
-    "userID" : "pedro.teix"
-}
-r = requests.post("http://127.0.0.1:10002/api/userID", headers=headers)
 
 
 # Print result
