@@ -259,7 +259,8 @@ function generateContent() {
       var bottomLine = $('#memefy input[name="bottomLine"]').val();
 
       // make a submit request
-      var category = (topLine == "" && bottomLine == "") ? "PHOTO" : "MEME";
+      //var category = (topLine == "" && bottomLine == "") ? "PHOTO" : "MEME";
+      var category = (currentIndex === 0) ? "PHOTO" : "MEME";
       $.post(path+"/api/putAdvanced", {
         "userID" : sessionStorage.getItem("userID"),
         "id" : imgIDs[currentIndex],
