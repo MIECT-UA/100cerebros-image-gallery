@@ -107,6 +107,19 @@ function generateContent() {
       $('.votes span.upvotes').html(imgInfo.votes_up);
       $('.votes span.downvotes').html(imgInfo.votes_down);
 
+      // press vote buttons
+      var upvoteBtn = "#imageView .votes button.upvote";
+      var downvoteBtn = "#imageView .votes button.downvote";
+      var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"))[imgInfo.category];
+      var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"))[imgInfo.category];
+      if(userUpvotes.indexOf(imgID) !== -1) {
+        // activate upvote button
+        $(upvoteBtn).addClass("inactive");
+      } else if(userDownvotes.indexOf(imgID) !== -1) {
+        // activate downvote button
+        $(downvoteBtn).addClass("inactive");
+      }
+
       // increment image views if being seen for the first time (only for 100Cerebros' Gallery)
       var allCategoriesViews = JSON.parse(sessionStorage.getItem("userViews"));
       var userViews = allCategoriesViews[imgInfo.category];
