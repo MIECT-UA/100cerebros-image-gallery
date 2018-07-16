@@ -8,7 +8,7 @@
  * |/     \||/     \|\_______/|/    )_)     |/       |/   \__/(_______)(_______)|/   \__/|/     \||/     \|
  */
 
-path = "" // https://xcoa.av.it.pt/labi1617-p2-g2
+path = "https://xcoa.av.it.pt/labi1617-p2-g2"
 
 function generateContent() {
 
@@ -20,31 +20,19 @@ function generateContent() {
     // add logo to page
     $("#logo img").prop("src", path+"/static/img/100brains.png");
 
-    setTimeout(function() {
-      location.replace(path+"/static/login.html");
-    }, 600);
-
-  /** LOGIN **********************************************************************************/
-} else if ($("div.content").data("id") == "login") {
-
-  $("#login button").click(function(event) {
-    event.preventDefault();
-
-    var userID = $('#login input[name="email"]').val().split("@")[0];
-    sessionStorage.setItem("userID", userID);
-
     // get user credentials and save them
-    $.get(path+"/api/userID", { "userID" : userID }, function(response){
+    $.get(path+"/userID", function(response){
+      sessionStorage.setItem("userID", response.userID);
       sessionStorage.setItem("username", response.username);
       sessionStorage.setItem("avatar", response.avatar);
       sessionStorage.setItem("userUpvotes", response.upvotes);
       sessionStorage.setItem("userDownvotes", response.downvotes);
       sessionStorage.setItem("userViews", response.views);
+    });
 
+    setTimeout(function() {
       location.replace(path+"/static/home.html");
-    }, 'json');
-  });
-
+    }, 600);
 
   /** UPLOAD *********************************************************************************/
   } else if ($("div.content").data("id") == "upload") {
@@ -60,7 +48,6 @@ function generateContent() {
       // add loading effect
       $("#loading").toggleClass("invisible");
       $.post(path+"/api/putAdvanced", {
-        "userID" : sessionStorage.getItem("userID"),
         "id" : imgID,
         "type" : "PHOTO",
         "allIDs" : "["+imgID+"]"
@@ -86,39 +73,22 @@ function generateContent() {
 
     // get image
     setImgSrc(path+"/api/get?id="+imgID, "#mainImg", false);
-    $("#mainImg").data("id", imgID);
+
+    // generate go back link
+    var prevURL = document.referrer;
+    // confirm user came from either gallery.html or all.html
+    if (prevURL.indexOf("gallery.") === -1 && prevURL.indexOf("all.") === -1) {
+      // if not, use a default address
+      prevURL = "gallery.html?g=photo&sort=upvotes"
+    }
+    $("#header a").attr("href", prevURL);
 
     // populate fields and do checks
     getImgInfo(imgID, function(imgInfo) {
-      // save category
-      $("#mainImg").data("category", imgInfo.category);
-      // add author name
-      $("#imgAuthor").html(imgInfo.username);
-
-      // generate go back link
-      if (imgInfo.username) { // only 100Cerebros galleries have username info
-        $("#header a").attr("href", "gallery.html?g="+imgInfo.category+"&sort=upvotes");
-      } else {
-        $("#header a").attr("href", "all.html");
-      }
-
       // populate votes and views fields
       $('#views span').html(imgInfo.views);
       $('.votes span.upvotes').html(imgInfo.votes_up);
       $('.votes span.downvotes').html(imgInfo.votes_down);
-
-      // press vote buttons
-      var upvoteBtn = "#imageView .votes button.upvote";
-      var downvoteBtn = "#imageView .votes button.downvote";
-      var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"))[imgInfo.category];
-      var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"))[imgInfo.category];
-      if(userUpvotes.indexOf(imgID) !== -1) {
-        // activate upvote button
-        $(upvoteBtn).addClass("inactive");
-      } else if(userDownvotes.indexOf(imgID) !== -1) {
-        // activate downvote button
-        $(downvoteBtn).addClass("inactive");
-      }
 
       // increment image views if being seen for the first time (only for 100Cerebros' Gallery)
       var allCategoriesViews = JSON.parse(sessionStorage.getItem("userViews"));
@@ -126,10 +96,7 @@ function generateContent() {
 
       if(userViews.indexOf(imgID) === -1) {
         // it's the first time user is seeing the image
-        $.post(path+"/api/updateViews", {
-          "userID" : sessionStorage.getItem("userID"),
-          "imgID" : imgID
-        }, function() {
+        $.post(path+"/api/updateViews", { "imgID" : imgID }, function() {
           allCategoriesViews[imgInfo.category].push(imgID);
           sessionStorage.setItem("userViews", JSON.stringify(allCategoriesViews));
         }, 'json');
@@ -199,7 +166,6 @@ function generateContent() {
       // make a submit request
       var category = (currentIndex === 0) ? "PHOTO" : "EFFECT";
       $.post(path+"/api/putAdvanced", {
-        "userID" : sessionStorage.getItem("userID"),
         "id" : imgIDs[currentIndex],
         "type" : category,
         "allIDs" : JSON.stringify(imgIDs)
@@ -259,10 +225,8 @@ function generateContent() {
       var bottomLine = $('#memefy input[name="bottomLine"]').val();
 
       // make a submit request
-      //var category = (topLine == "" && bottomLine == "") ? "PHOTO" : "MEME";
-      var category = (currentIndex === 0) ? "PHOTO" : "MEME";
+      var category = (topLine == "" && bottomLine == "") ? "PHOTO" : "MEME";
       $.post(path+"/api/putAdvanced", {
-        "userID" : sessionStorage.getItem("userID"),
         "id" : imgIDs[currentIndex],
         "type" : category,
         "allIDs" : JSON.stringify(imgIDs)
@@ -308,9 +272,7 @@ function generateContent() {
 
       // add images to the page
       for (var i = 0; i < data.length; i++) {
-        if (data[i].category == gallery) {
-          addNewImage(data[i], userUpvotes, userDownvotes);
-        }
+        addNewImage(data[i], userUpvotes, userDownvotes);
       }
     });
 
@@ -326,16 +288,15 @@ function generateContent() {
       $("#loading").toggleClass("invisible");
 
       data = JSON.parse(data);
-      for (var i = data.length -1; i >= 0; i--) {
+      for (var i = 0; i < data.length; i++) {
         for (key in data[i]) {
-          if (key == 12 || i == 6) {continue;} // trick to prevent overload of errors (which would prevent some of the actual correct images to load)
           $(".content").append("<ul class='table-view gallery-view' id='"+key+"'> \
-                                  <h4><a href='https://xcoa.av.it.pt/labi1617-p2-g"+key+"'>"+ ((key == 2) ? "100Cerebros\'" : "Group "+key+"\'s") +" Images</a></h4> \
+                                  <h4>"+ ((key == 2) ? "100Cerebros\'" : "Group "+key+"\'s") +" Images</h4> \
                                 </ul>");
           for (var j = 0; j < data[i][key].length; j++) {
             addNewImageOnly(data[i][key][j],
                             "https://xcoa.av.it.pt/labi1617-p2-g"+key+"/api/get?id="+data[i][key][j].id,
-                            "#"+key, "https://xcoa.av.it.pt/labi1617-p2-g"+key, "not-selected", "", "not-selected", "");
+                            "#"+key, "not-selected", "", "not-selected", "");
           }
         }
       }
@@ -343,10 +304,8 @@ function generateContent() {
   /** SETTINGS ******************************************************************************/
   } else if ($("div.content").data("id") == "settings") {
     // generate user's avatar and username
-    var username = sessionStorage.getItem("username");
-    $("#username").html(username);
+    $("#username").html(sessionStorage.getItem("username"));
     $("#userAvatar").prop('src', "img/icons/avatar_"+sessionStorage.getItem("avatar")+".png");
-    $("#changeUsername input[name='username']").attr("placeholder", username);
 
     // handle eusername change
     $('#changeUsername button[type=submit]').click(function(event) {
@@ -355,7 +314,6 @@ function generateContent() {
       var newName = $('#changeUsername input[name="username"]').val();
 
       $.post(path+"/api/updateUserInfo", {
-        "userID" : sessionStorage.getItem("userID"),
         "avatar" : sessionStorage.getItem("avatar"),
         "username" : newName
       }, function() {
@@ -369,7 +327,6 @@ function generateContent() {
       var newAvatar = $(event.target).data('index');
 
       $.post(path+"/api/updateUserInfo", {
-        "userID" : sessionStorage.getItem("userID"),
         "avatar" : newAvatar,
         "username" : sessionStorage.getItem("username")
       }, function() {
@@ -382,7 +339,7 @@ function generateContent() {
   } else if ($("div.content").data("id") == "logout") {
     sessionStorage.clear();
 
-    $("#login").attr('href', path+"/");
+    $("#login").attr('href', path);
   }
 }
 
@@ -460,24 +417,17 @@ function addNewImage(data, userUpvotes, userDownvotes) {
     downvotesPrefix = "_small";
   }
 
-  addNewImageOnly(data, path+"/api/get?id="+data.id, "#imgList", "image.html?id="+data.id, upvoted, upvotesPrefix, downvoted, downvotesPrefix);
+  addNewImageOnly(data, path+"/api/get?id="+data.id, "#imgList", upvoted, upvotesPrefix, downvoted, downvotesPrefix);
 
 }
 
 // add a new image, with generic vote information
-function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvotesPrefix, downvoted, downvotesPrefix) {
-
-  var id = "";
-  if (data.id && data.id.indexOf(".") !== -1) {
-    id = data.id.substring(0,64);
-  } else if (data.id) {
-    id = data.id;
-  }
+function addNewImageOnly(data, requestPath, parentSelector, upvoted, upvotesPrefix, downvoted, downvotesPrefix) {
 
     $(parentSelector).append(
       "<li class='table-view-cell media' > \
-        <a href= '"+href+"'> \
-          <img id='"+id+"' class='media-object pull-left' src=''> \
+        <a href= 'image.html?id="+ data.id +"'> \
+          <img id='"+data.id+"' class='media-object pull-left' src=''> \
           <div class='votes'> \
             <img src='img/icons/upvotes"+upvotesPrefix+".png' alt='Upvote'> \
             <span class='upvotes "+upvoted+"'>"+ data.votes_up +"</span> \
@@ -486,8 +436,7 @@ function addNewImageOnly(data, requestPath, parentSelector, href, upvoted, upvot
           </div> \
         </a> \
       </li>");
-
-      setImgSrc(requestPath, "#"+id, false); // unique ids are used to avoid async conflicts
+      setImgSrc(requestPath, "#"+data.id, true); // unique ids are used to avoid async conflicts
 }
 
 function setImgSrc(requestPath, imgSelector, removeIdSelector) {
@@ -497,17 +446,11 @@ function setImgSrc(requestPath, imgSelector, removeIdSelector) {
       if (this.readyState == 4 && this.status == 200){
         // process server answer
         var fileRead = new FileReader();
-        fileRead.onload = function (e) {
-
-          $(imgSelector).addClass("gotcha");
-          $(imgSelector).prop("src", e.target.result);
+        fileRead.onload = function () {
+          $(imgSelector).prop("src", fileRead.result);
           if (removeIdSelector) {
             $(imgSelector).removeAttr('id');
           }
-          // remove faulty (no src) images
-          setTimeout(function() {
-            $('img[src=""]').parent().parent().addClass("invisible");
-          }, 5000);
         };
         fileRead.readAsDataURL(this.response);
       }
@@ -670,25 +613,24 @@ $(document).on('click', "#imageView .votes button.upvote", function() {
 
   var addedVote = $(upvoteBtn).hasClass("inactive");
   var imgID = $("#mainImg").data("id");
-  var category = $("#mainImg").data("category");
 
   // added or removed upvote
   if (!$(downvoteBtn).hasClass("inactive")) { // sanity check
-    $.get(path+"/api/updateVotes", {
-      "userID"  : sessionStorage.getItem("userID"),
-      "imgID"   : imgID,
-      "category": category,
-      "vote"    : addedVote ? 2 : 1
-    }, function() {
-      var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"));
 
-      if (!addedVote) { // add vote
-        userUpvotes[category].push(imgID);
-      } else { // remove vote
-         userUpvotes[category].splice(userUpvotes[category].indexOf(imgID), 1);
-      }
-      sessionStorage.setItem("userUpvotes", JSON.stringify(userUpvotes));
-      updateVotes(upvoteNum, upvoteBtn, addedVote);
+    $.post(path+"/api/updateVotes", {
+      "imgID"  : imgID,
+      "vote"   : addedVote ? 2 : 1
+    }, function() {
+      getImgInfo(imgID, function(imgInfo) {
+        var userUpvotes = JSON.parse(sessionStorage.getItem("userUpvotes"));
+        if (addedVote) { // add vote
+          userUpvotes[category].push(imgID);
+        } else { // remove vote
+           userUpvotes[category].splice(userUpvotes[imgInfo.category].indexOf(imgID), 1);
+        }
+        sessionStorage.setItem("userViews", JSON.stringify(userUpvotes));
+        updateVotes(upvoteNum, upvoteBtn, addedVote);
+      });
     }, 'json');
 
   }
@@ -702,25 +644,24 @@ $(document).on('click', "#imageView .votes button.downvote", function() {
 
   var addedVote = $(downvoteBtn).hasClass("inactive");
   var imgID = $("#mainImg").data("id");
-  var category = $("#mainImg").data("category");
 
   // added or removed downvote
   if (!$(upvoteBtn).hasClass("inactive")) {
 
-    $.get(path+"/api/updateVotes", {
-      "userID"  : sessionStorage.getItem("userID"),
-      "imgID"   : imgID,
-      "category": category,
-      "vote"    : addedVote ? 0 : -1
+    $.post(path+"/api/updateVotes", {
+      "imgID"  : imgID,
+      "vote"   : addedVote ? -1 : 0
     }, function() {
-      var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"));
-      if (!addedVote) { // add vote
-        userDownvotes[category].push(imgID);
-      } else { // remove vote
-         userDownvotes[category].splice(userDownvotes[category].indexOf(imgID), 1);
-      }
-      sessionStorage.setItem("userDownvotes", JSON.stringify(userDownvotes));
-      updateVotes(downvoteNum, downvoteBtn, addedVote);
+      getImgInfo(imgID, function(imgInfo) {
+        var userDownvotes = JSON.parse(sessionStorage.getItem("userDownvotes"));
+        if (addedVote) { // add vote
+          userUpvotes[imgInfo.category].push(imgID);
+        } else { // remove vote
+           userUpvotes[imgInfo.category].splice(userUpvotes[imgInfo.category].indexOf(imgID), 1);
+        }
+        sessionStorage.setItem("userViews", JSON.stringify(userUpvotes));
+        updateVotes(upvoteNum, upvoteBtn, addedVote);
+      });
     }, 'json');
 
   }
